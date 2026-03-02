@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Venta de Garage - Esculturas</title>
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <a href="/index.html" class="nav-logo">Venta de Garage</a>
+  <div class="nav-links" id="navLinks"></div>
+</nav>
+
+<section class="formulario">
+    <h2>Agregar Escultura</h2>
+    <form id="formEscultura">
+        <input type="text" id="nombre" placeholder="Nombre" required>
+        <input type="number" id="precio" placeholder="Precio" required>
+        <input type="text" id="material" placeholder="Material" required>
+        <button type="submit">Agregar</button>
+    </form>
+</section>
+
+<section>
+    <h2>Esculturas Disponibles</h2>
+    <div id="listaEsculturas" class="grid"></div>
+</section>
+
+<script src="/js/script.js"></script>
+</body>
+</html>
