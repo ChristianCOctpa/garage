@@ -4,33 +4,33 @@ import cors from "cors";
 import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-
-
-dotenv.config({ path: "./.env" });
-
-const app = express();
-app.use(cors());
-app.use(express.json());
-
 import path from "path";
 import { fileURLToPath } from "url";
+
+dotenv.config();
+
+const app = express();
+
+// ================= CONFIGURACIÓN =================
+app.use(cors());
+app.use(express.json());
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Servir frontend
+// Servir frontend estático
 app.use(express.static(path.join(__dirname, "../frontend")));
 
-// ================= CONEXIÓN MONGO =================
+// ================= CONEXIÓN A MONGO =================
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("Mongo conectado"))
-  .catch(err => console.log(err));
+  .then(() => console.log("Mongo conectado ✅"))
+  .catch(err => console.log("Error Mongo:", err));
 
 // ================= MODELOS =================
 const usuarioSchema = new mongoose.Schema({
-  nombre: String,
-  email: { type: String, unique: true },
-  password: String
+  nombre: { type: String, required: true },
+  email: { type: String, unique: true, required: true },
+  password: { type: String, required: true }
 });
 
 const esculturaSchema = new mongoose.Schema({
@@ -80,7 +80,7 @@ app.post("/api/auth/register", async (req, res) => {
 
     await nuevo.save();
 
-    res.json({ mensaje: "Usuario registrado" });
+    res.json({ mensaje: "Usuario registrado correctamente" });
 
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -133,26 +133,19 @@ app.post("/api/esculturas", authMiddleware, async (req, res) => {
   res.json(nueva);
 });
 
-// ================= ELIMINAR ESCULTURA (VERSIÓN CORREGIDA) =================
+// ================= ELIMINAR ESCULTURA =================
 app.delete("/api/esculturas/:id", authMiddleware, async (req, res) => {
   try {
-
     const { id } = req.params;
 
-    console.log("ID recibido:", id);
-    console.log("Usuario token:", req.user.id);
-
-    // Validar que el ID sea válido en Mongo
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ message: "ID inválido" });
     }
 
     const escultura = await Escultura.findOne({
       _id: id,
-      usuario: req.user.id   // 🔥 valida dueño directamente en consulta
+      usuario: req.user.id
     });
-
-    console.log("Escultura encontrada:", escultura);
 
     if (!escultura) {
       return res.status(404).json({ message: "No encontrada o no autorizada" });
@@ -160,17 +153,26 @@ app.delete("/api/esculturas/:id", authMiddleware, async (req, res) => {
 
     await Escultura.deleteOne({ _id: id });
 
-    console.log("Eliminada correctamente");
-
     res.json({ message: "Escultura eliminada correctamente" });
 
   } catch (error) {
-    console.error("ERROR AL ELIMINAR:", error);
     res.status(500).json({ message: error.message });
   }
 });
 
+// ================= RUTA PRINCIPAL =================
+app.get("/", (req, res) => {
+  res.send("API funcionando correctamente 🚀");
+});
+
+// ================= SPA FALLBACK =================
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/index.html"));
+});
+
 // ================= SERVIDOR =================
-app.listen(3000, () => {
-  console.log("Servidor en puerto 3000");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log("Servidor corriendo en puerto", PORT);
 });
